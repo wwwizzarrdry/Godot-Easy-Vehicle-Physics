@@ -9,8 +9,7 @@ Usage is simple:
 func _input(_event: InputEvent) -> void:
 	if Input.is_action_just_pressed("cycle_preset"):
 		var presets = ["NONE", "Arcade", "Drift", "Sport", "OffRoad", "Heavy"]
-		var cur_preset = vehicle.preset
-		var cur_id = presets.find(cur_preset) 
+		var cur_id = presets.find(vehicle.preset) 
 		var next_id = wrap(cur_id+1, 0, presets.size())
 		vehicle.change_preset(presets[next_id])
 ```
