@@ -2,6 +2,18 @@
 A ray cast based rigid body vehicle system for Godot 4.2 and above.
 
 *In this fork, I have added vehicle presets to enable fast switching of vehicle types.
+Usage is simple:
+```
+@onready var vehicle: Vehicle = $World/Players/Vehicle
+
+func _input(_event: InputEvent) -> void:
+	if Input.is_action_just_pressed("cycle_preset"):
+		var presets = ["NONE", "Arcade", "Drift", "Sport", "OffRoad", "Heavy"]
+		var cur_preset = vehicle.preset
+		var cur_id = presets.find(cur_preset) 
+		var next_id = wrap(cur_id+1, 0, presets.size())
+		vehicle.change_preset(presets[next_id])
+```
 
 ## Description
 A physics based vehicle controller designed to play well on a keyboard and be easy to configure. All parameters are contained in one script (vehicle.gd) and tooltips are provided for all of them.
