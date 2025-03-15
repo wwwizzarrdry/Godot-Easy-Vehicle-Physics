@@ -14,6 +14,701 @@ extends RigidBody3D
 ## Assign this to the Wheel [RayCast3D] that is this vehicle's rear right wheel.
 @export var rear_right_wheel : Wheel
 
+#
+# Added Vehicle Presets
+# In your vehicle controller, call vehicle.change_preset(preset_name:String) to switch presets on the fly.
+#
+var presets: Dictionary = {
+	"Arcade": {
+		##Steering
+			"steering_speed": 4.25,
+			"countersteer_speed": 11.0,
+			"steering_speed_decay": 0.20,
+			"steering_slip_assist": 0.15,
+			"countersteer_assist": 0.9,
+			"steering_exponent": 1.5,
+			"max_steering_angle": deg_to_rad(40.0),
+			#Front Axle
+			"front_steering_ratio": 1.0,
+			#Rear Axle
+			"rear_steering_ratio": 0.0,
+		##Throttle and Braking
+			"throttle_speed": 20.0,
+			"throttle_steering_adjust": 0.1,
+			"braking_speed": 10.0,
+			"brake_force_multiplier": 1.0,
+			"front_brake_bias": 0.6,
+			"traction_control_max_slip": 8.0,
+			#Front Axle
+			"front_abs_pulse_time": 0.03,
+			"front_abs_spin_difference_threshold": 12.0,
+			#Rear Axle
+			"rear_abs_pulse_time": 0.03,
+			"rear_abs_spin_difference_threshold": 12.0,
+		##Stability
+			"enable_stability": true,
+			"stability_yaw_engage_angle": 0.0,
+			"stability_yaw_strength": 6.0,
+			"stability_yaw_ground_multiplier": 6.0,
+			"stability_upright_spring": 1.0,
+			"stability_upright_damping": 1000.0,
+		##Motor
+			"max_torque": 300.0,
+			"max_rpm": 7000.0,
+			"idle_rpm": 1000.0,
+			"torque_curve": [
+				# must have all 5 data points for curve construction
+				# curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				[Vector2(0, 0.494505), 0.0, 2.04495, 0, 0],
+				[Vector2(0.617978, 1), 0.0, 0.0, 0, 0], 
+				[Vector2(1, 0.692308), -1.4839, 0.0, 0, 0]
+			],
+			"motor_drag": 0.005,
+			"motor_brake": 10.0,
+			"motor_moment": 0.5,
+			"clutch_out_rpm": 3000.0,
+			"max_clutch_torque_ratio": 1.6,
+		##Gearbox
+			"gear_ratios": [ 3.8, 2.3, 1.7, 1.3, 1.0, 0.8 ],
+			"final_drive": 3.2,
+			"reverse_ratio": 3.3,
+			"shift_time": 0.3,
+			"automatic_transmission": true,
+			"automatic_time_between_shifts": 1000.0,
+			"gear_inertia": 0.02,
+		##Drivetrain
+			"front_torque_split": 0.0,
+			"variable_torque_split": true,
+			"front_variable_split": 0.5,
+			"variable_split_speed": 1.0,
+			#Front Axle
+			"front_locking_differential_engage_torque": 200.0,
+			"front_torque_vectoring": 0.0,
+			#Rear Axle
+			"rear_locking_differential_engage_torque": 200.0,
+			"rear_torque_vectoring": 0.0,
+		##Suspension
+			"vehicle_mass": 1500.0,
+			"front_weight_distribution": 0.5,
+			"center_of_gravity_height_offset": -0.25,
+			"inertia_multiplier": 1.2,
+			#Front Axle
+			"front_spring_length": 0.15,
+			"front_resting_ratio": 0.5,
+			"front_damping_ratio": 0.6,
+			"front_bump_damp_multiplier": 0.6667,
+			"front_rebound_damp_multiplier": 1.5,
+			"front_arb_ratio": 0.25,
+			"front_camber": 0.01745329,
+			"front_toe": 0.01,
+			"front_bump_stop_multiplier": 1.0,
+			"front_beam_axle": false,
+			#Rear Axle
+			"rear_spring_length": 0.2,
+			"rear_resting_ratio": 0.5,
+			"rear_damping_ratio": 0.6,
+			"rear_bump_damp_multiplier": 0.6667,
+			"rear_rebound_damp_multiplier": 1.5,
+			"rear_arb_ratio": 0.25,
+			"rear_camber": 0.01745329,
+			"rear_toe": 0.01,
+			"rear_bump_stop_multiplier": 1.0,
+			"rear_beam_axle": false,
+		##Tires
+			"contact_patch": 0.2,
+			"braking_grip_multiplier": 2.0,
+			"wheel_to_body_torque_multiplier": 1.0,
+			"tire_stiffnesses": { 
+				"Road" : 10.0, 
+				"Dirt" : 0.5, 
+				"Grass" : 0.5
+			},
+			"coefficient_of_friction": { 
+				"Road" : 3.0, 
+				"Dirt" : 2.4, 
+				"Grass" : 2.0 
+			},
+			"rolling_resistance": { 
+				"Road" : 1.0, 
+				"Dirt" : 2.0, 
+				"Grass" : 4.0 
+			},
+			"lateral_grip_assist": { 
+				"Road" : 0.05, 
+				"Dirt" : 0.0, 
+				"Grass" : 0.0
+			},
+			"longitudinal_grip_ratio": { 
+				"Road" : 0.5,
+				"Dirt": 0.5, 
+				"Grass" : 0.5
+			},
+			#Front Axle
+			"front_tire_radius": 0.3,
+			"front_tire_width": 245.0,
+			"front_wheel_mass": 15.0,
+			#Rear Axle
+			"rear_tire_radius": 0.3,
+			"rear_tire_width": 245.0,
+			"rear_wheel_mass": 15.0,
+		##Aerodynamics
+		"coefficient_of_drag": 0.3,
+		"air_density": 1.225,
+		"frontal_area": 2.0,
+	},
+	"Drift": {
+		##Steering
+			"steering_speed": 4.25,
+			"countersteer_speed": 11.0,
+			"steering_speed_decay": 0.2,
+			"steering_slip_assist": 0.5,
+			"countersteer_assist": 0.75,
+			"steering_exponent": 1.5,
+			"max_steering_angle": deg_to_rad(68.8),
+			#Front Axle
+			"front_steering_ratio": 1.0,
+			#Rear Axle
+			"rear_steering_ratio": 0.0,
+		##Throttle and Braking
+			"throttle_speed": 20.0,
+			"throttle_steering_adjust": 0.1,
+			"braking_speed": 10.0,
+			"brake_force_multiplier": 1.0,
+			"front_brake_bias": -1.0,
+			"traction_control_max_slip": 8.0,
+			#Front Axle
+			"front_abs_pulse_time": 0.03,
+			"front_abs_spin_difference_threshold": 12.0,
+			#Rear Axle
+			"rear_abs_pulse_time": 0.03,
+			"rear_abs_spin_difference_threshold": 12.0,
+		##Stability
+			"enable_stability": true,
+			"stability_yaw_engage_angle": 0.1,
+			"stability_yaw_strength": 2.0,
+			"stability_yaw_ground_multiplier": 4.0,
+			"stability_upright_spring": 1.0,
+			"stability_upright_damping": 1000.0,
+		##Motor
+			"max_torque": 800.0,
+			"max_rpm": 8000.0,
+			"idle_rpm": 700.0,
+			"torque_curve": [
+				# must have all 5 data points for curve construction
+				# curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				[Vector2(0, 0.495), 0.0, 2.04495, 0, 0],
+				[Vector2(0.767, 1), 0.0, 0.0, 0, 0], 
+				[Vector2(1.0, 0.758), -2.04, 0.0, 0, 0]
+			],
+			"motor_drag": 0.005,
+			"motor_brake": 10.0,
+			"motor_moment": 0.3,
+			"clutch_out_rpm": 3000.0,
+			"max_clutch_torque_ratio": 1.6,
+		##Gearbox
+			"gear_ratios": [3.01, 2.07, 1.43, 1.0, 0.84, 0.5],
+			"final_drive": 4.1,
+			"reverse_ratio": 3.28,
+			"shift_time": 0.25,
+			"automatic_transmission": true,
+			"automatic_time_between_shifts": 1000.0,
+			"gear_inertia": 0.02,
+		##Drivetrain
+			"front_torque_split": 0.0,
+			"variable_torque_split": false,
+			"front_variable_split": 0.5,
+			"variable_split_speed": 1.0,
+			#Front Axle
+			"front_locking_differential_engage_torque": 200.0,
+			"front_torque_vectoring": 0.0,
+			#Rear Axle
+			"rear_locking_differential_engage_torque": 200.0,
+			"rear_torque_vectoring": 0.0,
+		##Suspension
+			"vehicle_mass": 1400.0,
+			"front_weight_distribution": 0.526,
+			"center_of_gravity_height_offset": -0.14,
+			"inertia_multiplier": 1.2,
+			#Front Axle
+			"front_spring_length": 0.15,
+			"front_resting_ratio": 0.6,
+			"front_damping_ratio": 0.8,
+			"front_bump_damp_multiplier": 0.6667,
+			"front_rebound_damp_multiplier": 1.5,
+			"front_arb_ratio": 0.5,
+			"front_camber": 0.034,
+			"front_toe": 0.005,
+			"front_bump_stop_multiplier": 1.0,
+			"front_beam_axle": false,
+			#Rear Axle
+			"rear_spring_length": 0.2,
+			"rear_resting_ratio": 0.6,
+			"rear_damping_ratio": 0.8,
+			"rear_bump_damp_multiplier": 0.6667,
+			"rear_rebound_damp_multiplier": 1.5,
+			"rear_arb_ratio": 0.5,
+			"rear_camber": 0.034,
+			"rear_toe": 0.005,
+			"rear_bump_stop_multiplier": 1.0,
+			"rear_beam_axle": false,
+		##Tires
+			"contact_patch": 0.2,
+			"braking_grip_multiplier": 1.5,
+			"wheel_to_body_torque_multiplier": 1.0,
+			"tire_stiffnesses": { 
+				"Road" : 20.0, 
+				"Dirt" : 0.5, 
+				"Grass" : 0.5
+			},
+			"coefficient_of_friction": { 
+				"Road" : 2.0, 
+				"Dirt" : 1.4, 
+				"Grass" : 1.0 
+			},
+			"rolling_resistance": { 
+				"Road" : 1.0, 
+				"Dirt" : 2.0, 
+				"Grass" : 4.0 
+			},
+			"lateral_grip_assist": { 
+				"Road" : 0.05, 
+				"Dirt" : 0.0, 
+				"Grass" : 0.0
+			},
+			"longitudinal_grip_ratio": { 
+				"Road" : 0.56,
+				"Dirt": 0.8, 
+				"Grass" : 0.6
+			},
+			#Front Axle
+			"front_tire_radius": 0.38,
+			"front_tire_width": 245.0,
+			"front_wheel_mass": 15.0,
+			#Rear Axle
+			"rear_tire_radius": 0.38,
+			"rear_tire_width": 275.0,
+			"rear_wheel_mass": 15.0,
+		##Aerodynamics
+			"coefficient_of_drag": 0.35,
+			"air_density": 1.225,
+			"frontal_area": 2.19,
+	},
+	"Sport": {
+		##Steering
+			"steering_speed": 4.25,
+			"countersteer_speed": 11.0,
+			"steering_speed_decay": 0.20,
+			"steering_slip_assist": 0.3,
+			"countersteer_assist": 0.75,
+			"steering_exponent": 1.5,
+			"max_steering_angle": deg_to_rad(40.0),
+			#Front Axle
+			"front_steering_ratio": 1.0,
+			#Rear Axle
+			"rear_steering_ratio": 0.0,
+		##Throttle and Braking
+			"throttle_speed": 20.0,
+			"throttle_steering_adjust": 0.1,
+			"braking_speed": 10.0,
+			"brake_force_multiplier": 1.0,
+			"front_brake_bias": -1.0,
+			"traction_control_max_slip": 8.0,
+			#Front Axle
+			"front_abs_pulse_time": 0.03,
+			"front_abs_spin_difference_threshold": 12.0,
+			#Rear Axle
+			"rear_abs_pulse_time": 0.03,
+			"rear_abs_spin_difference_threshold": 12.0,
+		##Stability
+			"enable_stability": true,
+			"stability_yaw_engage_angle": 0.0,
+			"stability_yaw_strength": 2.0,
+			"stability_yaw_ground_multiplier": 4.0,
+			"stability_upright_spring": 1.0,
+			"stability_upright_damping": 1000.0,
+		##Motor
+			"max_torque": 569.0,
+			"max_rpm": 6500.0,
+			"idle_rpm": 700.0,
+			"torque_curve": [
+				# must have all 5 data points for curve construction
+				# curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				[Vector2(0, 0.494505), 0.0, 2.04495, 0, 0],
+				[Vector2(0.767, 1), 0.0, 0.0, 0, 0], 
+				[Vector2(1, 0.758), -2.04, 0.0, 0, 0]
+			],
+			"motor_drag": 0.005,
+			"motor_brake": 10.0,
+			"motor_moment": 0.3,
+			"clutch_out_rpm": 3000.0,
+			"max_clutch_torque_ratio": 1.6,
+		##Gearbox
+			"gear_ratios": [3.01, 2.07, 1.43, 1.0, 0.84, 0.5],
+			"final_drive": 3.45,
+			"reverse_ratio": 3.28,
+			"shift_time": 0.25,
+			"automatic_transmission": true,
+			"automatic_time_between_shifts": 1000.0,
+			"gear_inertia": 0.02,
+		##Drivetrain
+			"front_torque_split": 0.0,
+			"variable_torque_split": false,
+			"front_variable_split": 0.5,
+			"variable_split_speed": 1.0,
+			#Front Axle
+			"front_locking_differential_engage_torque": 200.0,
+			"front_torque_vectoring": 0.0,
+			#Rear Axle
+			"rear_locking_differential_engage_torque": 200.0,
+			"rear_torque_vectoring": 0.0,
+		##Suspension
+			"vehicle_mass": 1746.0,
+			"front_weight_distribution": 0.514,
+			"center_of_gravity_height_offset": -0.14,
+			"inertia_multiplier": 1.2,
+			#Front Axle
+			"front_spring_length": 0.15,
+			"front_resting_ratio": 0.6,
+			"front_damping_ratio": 0.5,
+			"front_bump_damp_multiplier": 0.6667,
+			"front_rebound_damp_multiplier": 1.5,
+			"front_arb_ratio": 0.3,
+			"front_camber": 0.01745329,
+			"front_toe": 0.005,
+			"front_bump_stop_multiplier": 1.0,
+			"front_beam_axle": false,
+			#Rear Axle
+			"rear_spring_length": 0.2,
+			"rear_resting_ratio": 0.6,
+			"rear_damping_ratio": 0.5,
+			"rear_bump_damp_multiplier": 0.6667,
+			"rear_rebound_damp_multiplier": 1.5,
+			"rear_arb_ratio": 0.25,
+			"rear_camber": 0.01745329,
+			"rear_toe": 0.005,
+			"rear_bump_stop_multiplier": 1.0,
+			"rear_beam_axle": false,
+		##Tires
+			"contact_patch": 0.2,
+			"braking_grip_multiplier": 1.5,
+			"wheel_to_body_torque_multiplier": 1.0,
+			"tire_stiffnesses": { 
+				"Road" : 5.0, 
+				"Dirt" : 0.5, 
+				"Grass" : 0.5
+			},
+			"coefficient_of_friction": { 
+				"Road" : 2.0, 
+				"Dirt" : 1.4, 
+				"Grass" : 1.0 
+			},
+			"rolling_resistance": { 
+				"Road" : 1.0, 
+				"Dirt" : 2.0, 
+				"Grass" : 4.0 
+			},
+			"lateral_grip_assist": { 
+				"Road" : 0.05, 
+				"Dirt" : 0.0, 
+				"Grass" : 0.0
+			},
+			"longitudinal_grip_ratio": { 
+				"Road" : 0.56,
+				"Dirt": 0.8, 
+				"Grass" : 0.55
+			},
+			#Front Axle
+			"front_tire_radius": 0.355,
+			"front_tire_width": 245.0,
+			"front_wheel_mass": 15.0,
+			#Rear Axle
+			"rear_tire_radius": 0.355,
+			"rear_tire_width": 275.0,
+			"rear_wheel_mass": 15.0,
+		##Aerodynamics
+		"coefficient_of_drag": 0.35,
+		"air_density": 1.225,
+		"frontal_area": 2.19,
+	},
+	"OffRoad": {
+		##Steering
+			"steering_speed": 4.25,
+			"countersteer_speed": 11.0,
+			"steering_speed_decay": 0.20,
+			"steering_slip_assist": 0.6,
+			"countersteer_assist": 0.0,
+			"steering_exponent": 1.5,
+			"max_steering_angle": deg_to_rad(28.6),
+			#Front Axle
+			"front_steering_ratio": 1.0,
+			#Rear Axle
+			"rear_steering_ratio": 0.0,
+		##Throttle and Braking
+			"throttle_speed": 20.0,
+			"throttle_steering_adjust": 0.1,
+			"braking_speed": 10.0,
+			"brake_force_multiplier": 1.0,
+			"front_brake_bias": -1.0,
+			"traction_control_max_slip": 8.0,
+			#Front Axle
+			"front_abs_pulse_time": 0.03,
+			"front_abs_spin_difference_threshold": 12.0,
+			#Rear Axle
+			"rear_abs_pulse_time": 0.03,
+			"rear_abs_spin_difference_threshold": 12.0,
+		##Stability
+			"enable_stability": true,
+			"stability_yaw_engage_angle": 0.0,
+			"stability_yaw_strength": 0.0,
+			"stability_yaw_ground_multiplier": 0.0,
+			"stability_upright_spring": 1.0,
+			"stability_upright_damping": 1000.0,
+		##Motor
+			"max_torque": 3390.0,
+			"max_rpm": 7000.0,
+			"idle_rpm": 1000.0,
+			"torque_curve": [
+				# must have all 5 data points for curve construction
+				# curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				[Vector2(0, 0.494505), 0.0, 2.04495, 0, 0],
+				[Vector2(0.617978, 1), 0.0, 0.0, 0, 0], 
+				[Vector2(1, 0.692308), -1.4839, 0.0, 0, 0]
+			],
+			"motor_drag": 0.005,
+			"motor_brake": 10.0,
+			"motor_moment": 0.5,
+			"clutch_out_rpm": 3000.0,
+			"max_clutch_torque_ratio": 1.6,
+		##Gearbox
+			"gear_ratios": [1.0, 0.8],
+			"final_drive": 16.192,
+			"reverse_ratio": 1.0,
+			"shift_time": 0.3,
+			"automatic_transmission": true,
+			"automatic_time_between_shifts": 1000.0,
+			"gear_inertia": 0.02,
+		##Drivetrain
+			"front_torque_split": 0.5,
+			"variable_torque_split": false,
+			"front_variable_split": 0.5,
+			"variable_split_speed": 1.0,
+			#Front Axle
+			"front_locking_differential_engage_torque": 200.0,
+			"front_torque_vectoring": 0.1,
+			#Rear Axle
+			"rear_locking_differential_engage_torque": 200.0,
+			"rear_torque_vectoring": 0.1,
+		##Suspension
+			"vehicle_mass": 4536.0,
+			"front_weight_distribution": 0.5,
+			"center_of_gravity_height_offset": -0.8,
+			"inertia_multiplier": 1.2,
+			#Front Axle
+			"front_spring_length": 0.711,
+			"front_resting_ratio": 0.3,
+			"front_damping_ratio": 0.2,
+			"front_bump_damp_multiplier": 1.0,
+			"front_rebound_damp_multiplier": 105,
+			"front_arb_ratio": 0.0,
+			"front_camber": 0.01745329,
+			"front_toe": 0.01,
+			"front_bump_stop_multiplier": 1.0,
+			"front_beam_axle": true,
+			#Rear Axle
+			"rear_spring_length": 0.711,
+			"rear_resting_ratio": 0.3,
+			"rear_damping_ratio": 0.2,
+			"rear_bump_damp_multiplier": 1.0,
+			"rear_rebound_damp_multiplier": 1.0,
+			"rear_arb_ratio": 0.0,
+			"rear_camber": 0.01745329,
+			"rear_toe": 0.01,
+			"rear_bump_stop_multiplier": 1.0,
+			"rear_beam_axle": true,
+		##Tires
+			"contact_patch": 0.2,
+			"braking_grip_multiplier": 1.5,
+			"wheel_to_body_torque_multiplier": 1.0,
+			"tire_stiffnesses": { 
+				"Road" : 10.0, 
+				"Dirt" : 0.5, 
+				"Grass" : 0.5
+			},
+			"coefficient_of_friction": { 
+				"Road" : 3.0, 
+				"Dirt" : 2.4, 
+				"Grass" : 2.0 
+			},
+			"rolling_resistance": { 
+				"Road" : 1.0, 
+				"Dirt" : 2.0, 
+				"Grass" : 4.0 
+			},
+			"lateral_grip_assist": { 
+				"Road" : 0.05, 
+				"Dirt" : 0.0, 
+				"Grass" : 0.0
+			},
+			"longitudinal_grip_ratio": { 
+				"Road" : 0.5,
+				"Dirt": 0.5, 
+				"Grass" : 0.5
+			},
+			#Front Axle
+			"front_tire_radius": 0.85,
+			"front_tire_width": 1000.0,
+			"front_wheel_mass": 363.0,
+			#Rear Axle
+			"rear_tire_radius": 0.85,
+			"rear_tire_width": 1000.0,
+			"rear_wheel_mass": 363.0,
+		##Aerodynamics
+		"coefficient_of_drag": 0.3,
+		"air_density": 1.225,
+		"frontal_area": 2.0,
+	},
+	"Heavy": {
+		##Steering
+			"steering_speed": 4.25,
+			"countersteer_speed": 11.0,
+			"steering_speed_decay": 0.20,
+			"steering_slip_assist": 0.6,
+			"countersteer_assist": 0.0,
+			"steering_exponent": 1.5,
+			"max_steering_angle": deg_to_rad(28.6),
+			#Front Axle
+			"front_steering_ratio": 1.0,
+			#Rear Axle
+			"rear_steering_ratio": 0.0,
+		##Throttle and Braking
+			"throttle_speed": 20.0,
+			"throttle_steering_adjust": 0.1,
+			"braking_speed": 10.0,
+			"brake_force_multiplier": 1.0,
+			"front_brake_bias": -1.0,
+			"traction_control_max_slip": 8.0,
+			#Front Axle
+			"front_abs_pulse_time": 0.03,
+			"front_abs_spin_difference_threshold": 12.0,
+			#Rear Axle
+			"rear_abs_pulse_time": 0.03,
+			"rear_abs_spin_difference_threshold": 12.0,
+		##Stability
+			"enable_stability": true,
+			"stability_yaw_engage_angle": 0.0,
+			"stability_yaw_strength": 0.0,
+			"stability_yaw_ground_multiplier": 0.0,
+			"stability_upright_spring": 1.0,
+			"stability_upright_damping": 1000.0,
+		##Motor
+			"max_torque": 3390.0,
+			"max_rpm": 7000.0,
+			"idle_rpm": 1000.0,
+			"torque_curve": [
+				# must have all 5 data points for curve construction
+				# curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				[Vector2(0, 0.494505), 0.0, 2.04495, 0, 0],
+				[Vector2(0.617978, 1), 0.0, 0.0, 0, 0], 
+				[Vector2(1, 0.692308), -1.4839, 0.0, 0, 0]
+			],
+			"motor_drag": 0.005,
+			"motor_brake": 10.0,
+			"motor_moment": 0.5,
+			"clutch_out_rpm": 3000.0,
+			"max_clutch_torque_ratio": 1.6,
+		##Gearbox
+			"gear_ratios": [1.0, 0.8],
+			"final_drive": 16.192,
+			"reverse_ratio": 1.0,
+			"shift_time": 0.3,
+			"automatic_transmission": true,
+			"automatic_time_between_shifts": 1000.0,
+			"gear_inertia": 0.02,
+		##Drivetrain
+			"front_torque_split": 0.5,
+			"variable_torque_split": false,
+			"front_variable_split": 0.5,
+			"variable_split_speed": 1.0,
+			#Front Axle
+			"front_locking_differential_engage_torque": 200.0,
+			"front_torque_vectoring": 0.1,
+			#Rear Axle
+			"rear_locking_differential_engage_torque": 200.0,
+			"rear_torque_vectoring": 0.1,
+		##Suspension
+			"vehicle_mass": 4536.0,
+			"front_weight_distribution": 0.5,
+			"center_of_gravity_height_offset": -0.8,
+			"inertia_multiplier": 1.2,
+			#Front Axle
+			"front_spring_length": 0.711,
+			"front_resting_ratio": 0.3,
+			"front_damping_ratio": 0.2,
+			"front_bump_damp_multiplier": 1.0,
+			"front_rebound_damp_multiplier": 105,
+			"front_arb_ratio": 0.0,
+			"front_camber": 0.01745329,
+			"front_toe": 0.01,
+			"front_bump_stop_multiplier": 1.0,
+			"front_beam_axle": true,
+			#Rear Axle
+			"rear_spring_length": 0.711,
+			"rear_resting_ratio": 0.3,
+			"rear_damping_ratio": 0.2,
+			"rear_bump_damp_multiplier": 1.0,
+			"rear_rebound_damp_multiplier": 1.0,
+			"rear_arb_ratio": 0.0,
+			"rear_camber": 0.01745329,
+			"rear_toe": 0.01,
+			"rear_bump_stop_multiplier": 1.0,
+			"rear_beam_axle": true,
+		##Tires
+			"contact_patch": 0.2,
+			"braking_grip_multiplier": 1.5,
+			"wheel_to_body_torque_multiplier": 1.0,
+			"tire_stiffnesses": { 
+				"Road" : 10.0, 
+				"Dirt" : 0.5, 
+				"Grass" : 0.5
+			},
+			"coefficient_of_friction": { 
+				"Road" : 3.0, 
+				"Dirt" : 2.4, 
+				"Grass" : 2.0 
+			},
+			"rolling_resistance": { 
+				"Road" : 1.0, 
+				"Dirt" : 2.0, 
+				"Grass" : 4.0 
+			},
+			"lateral_grip_assist": { 
+				"Road" : 0.05, 
+				"Dirt" : 0.0, 
+				"Grass" : 0.0
+			},
+			"longitudinal_grip_ratio": { 
+				"Road" : 0.5,
+				"Dirt": 0.5, 
+				"Grass" : 0.5
+			},
+			#Front Axle
+			"front_tire_radius": 0.85,
+			"front_tire_width": 1000.0,
+			"front_wheel_mass": 363.0,
+			#Rear Axle
+			"rear_tire_radius": 0.85,
+			"rear_tire_width": 1000.0,
+			"rear_wheel_mass": 363.0,
+		##Aerodynamics
+		"coefficient_of_drag": 0.3,
+		"air_density": 1.225,
+		"frontal_area": 2.0,
+	},
+}
+
+@export_group("Class Preset")
+@export_enum("NONE", "Arcade", "Drift", "Sport", "OffRoad", "Heavy") var preset: String = "Arcade"
+
 @export_group("Steering")
 ## The rate that the steering input changes in order to smooth
 ## out direction changes to the wheel.
@@ -423,6 +1118,38 @@ class Axle:
 
 func _ready():
 	initialize()
+
+# ADDED PRESET VEHICLE TYPES
+## Choices: NONE, Arcade, Drift, Sport, OffRoad, Heavy
+func change_preset(value):
+	print("car preset changed: ", value)
+	preset = value
+	on_preset_changed(value)
+
+func on_preset_changed(val):
+   	# force default to Arcade
+	var value = "Arcade" if val == "NONE" else val
+	var vehicle = self
+	var attributes = presets[value]
+	for key in attributes.keys():
+		if key == "torque_curve":
+			# Create a new Curve object
+			var curve = Curve.new()
+			for point in attributes[key]:
+				# Add a point with specified position and tangents
+				#curve.add_point(Vector2(0.5, 0.5), 1.0, -1.0, Curve.TANGENT_FREE, Curve.TANGENT_FREE)
+				curve.add_point(point[0], point[1], point[2], point[3], point[4])
+				curve.bake()
+			vehicle[key] = curve
+		elif key == "gear_ratios":
+			vehicle[key].clear()
+			for gear in attributes[key]:
+				vehicle[key].append(gear)
+		elif key == "vehicle_mass":
+			vehicle[key] = attributes[key]
+			vehicle.mass = attributes[key]
+		else:
+			vehicle[key] = attributes[key]
 
 func _integrate_forces(state : PhysicsDirectBodyState3D):
 	current_gravity = state.total_gravity
