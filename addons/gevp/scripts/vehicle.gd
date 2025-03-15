@@ -1118,6 +1118,9 @@ class Axle:
 
 func _ready():
 	initialize()
+	if preset != "NONE":
+		print("Current Vehicle Preset: ", preset)
+		change_preset(preset)
 
 # ADDED PRESET VEHICLE TYPES
 ## Choices: NONE, Arcade, Drift, Sport, OffRoad, Heavy
