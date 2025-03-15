@@ -3,10 +3,11 @@ A ray cast based rigid body vehicle system for Godot 4.2 and above.
 
 *In this fork, I have added vehicle presets to enable fast switching of vehicle types.
 Usage is simple: 
-'''
-change_preset(preset:String)
+```
+change_preset(preset)
 ```
 
+Change presets on the fly:
 ```
 @onready var vehicle: Vehicle = $World/Players/Vehicle
 
